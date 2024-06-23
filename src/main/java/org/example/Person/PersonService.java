@@ -1,6 +1,9 @@
 package org.example.Person;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -31,7 +34,7 @@ public class PersonService implements PersonRepository{
         .map(XMLHandler::parseFile)
         .toList();
     if (result.size() == 1){
-      System.out.println(result);
+      System.out.println(result.get(0));
       return result.get(0);
     } else {
       System.out.println(("Failed to find Employee with given id."));
@@ -41,16 +44,23 @@ public class PersonService implements PersonRepository{
 
   @Override
   public List<Person> findByParameter(Map<String, String> parameters) {
+    List<Person> result = new ArrayList<>();
+
     //removes entries with empty value
     parameters.entrySet().removeIf(entry -> entry.getValue().isEmpty());
-      currentDir = EXTERNAL_DIRECTORY;
-      File dir = new File(currentDir);
+    File dir = new File(EXTERNAL_DIRECTORY);
 
-    // Filter files and parse them into Person objects
-    List<Person> result = Arrays.stream(Objects.requireNonNull(dir.listFiles()))
+    // Filter files in external folder and parse them into Person objects
+    result.addAll(Arrays.stream(Objects.requireNonNull(dir.listFiles()))
         .map(XMLHandler::parseFile).filter(Objects::nonNull)
         .filter(person -> personMatcher(parameters, person))
-        .toList();
+        .toList());
+    // Filter files in internal folder and parse them into Person objects
+    dir = new File(INTERNAL_DIRECTORY);
+    result.addAll(Arrays.stream(Objects.requireNonNull(dir.listFiles()))
+        .map(XMLHandler::parseFile).filter(Objects::nonNull)
+        .filter(person -> personMatcher(parameters, person))
+        .toList());
     System.out.println("Records found:");
     result.forEach(System.out::println);
     System.out.println("----------------------------------");
@@ -59,26 +69,25 @@ public class PersonService implements PersonRepository{
 
   @Override
   public List<Person> findAll() {
-    currentDir = EXTERNAL_DIRECTORY;
-    File external = new File(currentDir);
+    List<Person> result = new ArrayList<>();
+    File external = new File(EXTERNAL_DIRECTORY);
     System.out.println("External employees: ");
     System.out.println("----------------------------------------");
-    printDirectoryContent(external);
-    currentDir = INTERNAL_DIRECTORY;
-    File internal = new File(currentDir);
+    result.addAll(printDirectoryContent(external));
+    File internal = new File(INTERNAL_DIRECTORY);
     System.out.println("----------------------------------------");
     System.out.println("Internal employees: ");
     System.out.println("----------------------------------------");
-    printDirectoryContent(internal);
+    result.addAll(printDirectoryContent(internal));
     System.out.println("----------------------------------------");
-    return null;
+    return result;
   }
 
   //UI provides first letter part of id
   //after that method finds last used index and after parsing into String
   //creates file with parameters provided in ui using static XMLHandler class
   @Override
-  public void create(Person person) {
+  public boolean create(Person person) {
     currentDir = person.getPersonId().contains("E") ? EXTERNAL_DIRECTORY : INTERNAL_DIRECTORY;
     File dir = new File(currentDir);
     //finds last created file to determine next id
@@ -89,38 +98,55 @@ public class PersonService implements PersonRepository{
     //prepareId parses file name into id
     person.setPersonId(prepareId(person.getPersonId(), lastFile));
     XMLHandler.createFile(person, currentDir);
+    if (Files.exists(Path.of(person.getPersonId()))){
+      return true;
+    } else {
+      return false;
+    }
   }
 
   //Ui provides Person id
   @Override
-  public void remove(String id) {
+  public boolean remove(String id) {
     currentDir = id.contains("E") ? EXTERNAL_DIRECTORY : INTERNAL_DIRECTORY;
     File dir = new File(currentDir);
     List<File> result = Arrays.stream(Objects.requireNonNull(dir.listFiles()))
         .filter(file -> XMLHandler.parseFile(file).getPersonId().equals(id))
         .toList();
-    if (result.size() <= 1) {
+    if (result.size() == 1) {
       File file = result.get(0);
       if (file.delete()){
         System.out.println("Record removed successfully.");
+        return true;
       } else {
         System.out.println("Failed to remove record.");
+        return false;
       }
     } else {
       System.out.println("Record with given id: " + id + " not found.");
+      return false;
     }
   }
 
   @Override
-  public void modify(Person person) {
-    currentDir = person.getPersonId().contains("E") ? EXTERNAL_DIRECTORY : INTERNAL_DIRECTORY;
-    File dir = new File(currentDir);
-    List<File> result = Arrays.stream(Objects.requireNonNull(dir.listFiles()))
-        .filter(file -> XMLHandler.parseFile(file).getPersonId().equals(person.getPersonId()))
-        .toList();
-    if (result.size() == 1) {
-      File tmp = result.get(0);
-      XMLHandler.modifyFile(tmp, person);
+  public boolean modify(Person person) {
+    if (person.getPersonId() != null) {
+      currentDir = person.getPersonId().contains("E") ? EXTERNAL_DIRECTORY : INTERNAL_DIRECTORY;
+      File dir = new File(currentDir);
+      List<File> result = Arrays.stream(Objects.requireNonNull(dir.listFiles()))
+          .filter(file -> XMLHandler.parseFile(file).getPersonId().equals(person.getPersonId()))
+          .toList();
+      if (result.size() == 1) {
+        File tmp = result.get(0);
+        XMLHandler.modifyFile(tmp, person);
+        return true;
+      } else {
+        System.out.println("Could not find employee with id: " + person.getPersonId());
+        return false;
+      }
+    } else {
+      System.out.println("No id provided.");
+      return false;
     }
   }
 
@@ -141,11 +167,12 @@ public class PersonService implements PersonRepository{
     return result;
   }
   //prints content of directory
-  public void printDirectoryContent(File dir){
-    Arrays.stream(Objects.requireNonNull(dir.listFiles()))
+  public List<Person> printDirectoryContent(File dir){
+    List<Person> result = Arrays.stream(Objects.requireNonNull(dir.listFiles()))
         .map(XMLHandler::parseFile)
-        .toList()
-        .forEach(System.out::println);
+        .toList();
+    result.forEach(System.out::println);
+    return result;
   }
   //Checks whether person and provided parameters match and returns true if they do
   public boolean personMatcher(Map<String, String> parameters, Person person){

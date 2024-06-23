@@ -31,14 +31,20 @@ public class ApplicationLoop {
       switch (userInput) {
         case "1":
           System.out.print("Type id:");
-          System.out.println(personService.findById(scanner.nextLine()));
+          personService.findById(scanner.nextLine());
           break;
         case "2":
           Person person = new Person();
           System.out.print("external(t/f):");
           String check = scanner.nextLine();
           //assigns first part of id to know which directory to scan to assign rest of id
-          String val = check.equals("t") ? "E" : "I";
+          String val;
+          if (check.equals("t") || check.equals("f")) {
+            val = check.equals("t") ? "E" : "I";
+          } else {
+            System.out.println("wrong input please write 't' or 'f'");
+            break;
+          }
           person.setPersonId(val);
           System.out.print("firstname:");
           person.setFirstName(scanner.nextLine());
@@ -94,8 +100,15 @@ public class ApplicationLoop {
         case "0":
           looping = false;
           break;
+        default:
+          System.out.println("wrong input");
+          break;
       }
       scanner.reset();
     }
+  }
+
+  public void getAllFields(){
+
   }
 }

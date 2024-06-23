@@ -1,5 +1,5 @@
+import Tests.MockDatabase;
 import Tests.PersonServiceTest;
-import org.example.Person.PersonService;
 
 public class ApplicationTest {
   private static final String DB_PATH = "src/test/java/db";
@@ -8,15 +8,9 @@ public class ApplicationTest {
 
   public static void main(String[] args) {
     MockDatabase mockDatabase = new MockDatabase(DB_PATH, EXTERNAL, INTERNAL);
-    mockDatabase.mock();
-    PersonServiceTest personServiceTest = new PersonServiceTest(EXTERNAL, INTERNAL);
-
-
-
-
-
-
-
+    PersonServiceTest personServiceTest = new PersonServiceTest(EXTERNAL, INTERNAL, mockDatabase);
+    personServiceTest.beginTest();
     mockDatabase.removeMockedDB();
+    personServiceTest.testResults();
   }
 }

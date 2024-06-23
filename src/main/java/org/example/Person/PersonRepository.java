@@ -8,7 +8,7 @@ public interface PersonRepository {
   Person findById(String id);
   List<Person> findByParameter(Map<String, String> parameters);
   List<Person> findAll();
-  void create(Person person);
-  void remove(String id);
-  void modify(Person person);
+  boolean create(Person person);
+  boolean remove(String id);
+  boolean modify(Person person);
 }
