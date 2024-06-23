@@ -6,11 +6,11 @@ Zadanie rekrutacyjne
 
 ## Uruchomienie Aplikacji
 
-Aby uruchomić aplikację potrzebna jest zainstalowana java a następnie należy wykonać te kroki:
+Aby uruchomić aplikację potrzebna jest zainstalowana java, a następnie należy wykonać te kroki:
 
 ```
   1. Pobrać RecrutingExerciseIDN.zip,
-  2. Wypakować folderu,
+  2. Wypakować do folderu,
   3. Otworzyć w jako projekt w dowolnym IDE.
 ```
 
