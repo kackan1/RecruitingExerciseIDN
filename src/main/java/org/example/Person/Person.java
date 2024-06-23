@@ -8,6 +8,25 @@ public class Person {
   String email;
   String pesel;
 
+  public enum PersonField{
+    PERSON_ID("PersonId"),
+    FIRST_NAME("FirstName"),
+    LAST_NAME("LastName"),
+    MOBILE("Mobile"),
+    EMAIL("Email"),
+    PESEL("PESEL");
+
+    private String fieldName;
+
+    PersonField(String xmlName) {
+      this.fieldName = xmlName;
+    }
+
+    public String get(){
+      return fieldName;
+    }
+  }
+
   public Person(String personId, String firstName, String lastName, String mobile, String email, String pesel) {
     this.personId = personId;
     this.firstName = firstName;
@@ -18,7 +37,6 @@ public class Person {
   }
 
   public Person() {
-
   }
 
   public String getPersonId() {
